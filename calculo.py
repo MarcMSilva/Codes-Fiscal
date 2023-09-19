@@ -1,5 +1,9 @@
-import locale
 import PySimpleGUI as sg
+import pandas as pd
+import os
+
+
+font = ('Arial', 8)
 
 # Limpar o resultado/valor líquido
 def limparConsulta():
@@ -36,6 +40,10 @@ def janelaInicial():
             [sg.Text(''), sg.Text(''), sg.InputText(key='codImp3', size=(5)), sg.InputText(key='base3', size=(10)), sg.InputText(key='valor3', size=(10))],
             [sg.Text(''), sg.Text(''), sg.InputText(key='codImp4', size=(5)), sg.InputText(key='base4', size=(10)), sg.InputText(key='valor4', size=(10))],
             [sg.Text(''), sg.Text(''), sg.Text(key='valorLiquido')],
+            [sg.Text('', size=(10,0)), sg.Button('Copiar Valores')],
+            [sg.Text('')],
+            [sg.Text('', size=(6,0)), sg.Text('Criado por Marcelo MSilva. v1.1!', font=font)],
+
       ]
       return sg.Window('Calculadora de impostos retidos na fonte v1.0', layout, finalize=True)
 
@@ -69,7 +77,7 @@ while True:
       try:
             fValorNF = float(valores['valorNotaFiscal'])
       except ValueError:
-            sg.popup('Por favor informar o valor da nota fiscal com ponto ao invés de vírgula.')
+            sg.popup('Verificar o valor da nota fiscal.')
             continue
 
 
@@ -83,7 +91,7 @@ while True:
       try:
             ISDed = float(valorISDed)
       except ValueError:
-            sg.popup('Por favor informar o valor da dedução do ISSQN com ponto ao invés de vírgula.')
+            sg.popup('Verificar o valor da dedução do ISSQN.')
             continue
       ISDed = float(valorISDed)
 
@@ -98,7 +106,7 @@ while True:
       try:
             IS = float(valorIS)
       except ValueError:
-            sg.popup('Por favor informar a aliquota da ISSQN com ponto ao invés de vírgula.')
+            sg.popup('Verificar da alíquota do ISSQN.')
             continue
       IS = float(valorIS)
       ISReturn = IS
@@ -127,7 +135,7 @@ while True:
       try:
             INDed = float(valorDed)
       except ValueError:
-            sg.popup('Por favor informar o valor da base do INSS com ponto ao invés de vírgula.')
+            sg.popup('Verificar da base do INSS.')
             continue
       INDed = float(valorDed)
       INReturn = IN
@@ -603,6 +611,38 @@ while True:
             janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
 
             IR = IRReturn
+
+
+      #Se clicar no botão Copiar Valores:
+      if evento == 'Copiar Valores':
+            #Seta nas variáveis abaixo os valores que estão nos campos
+            base1 = valores['base1']
+            valor1 = valores['valor1']
+            base2 = valores['base2']
+            valor2 = valores['valor2']
+            base3 = valores['base3']
+            valor3 = valores['valor3']
+            base4 = valores['base4']
+            valor4 = valores['valor4']
+            codImp1 = valores['codImp1']
+            codImp2 = valores['codImp2']
+            codImp3 = valores['codImp3']
+            codImp4 = valores['codImp4']
+
+            #Cria um dataframe com base nas variáveis acima
+            df1 = pd.DataFrame([[base2, valor2], [base3, valor3], [base4, valor4]],
+                               index=['1', '2', '3'],
+                               columns=[base1, valor1])
+
+            #Cria um excel com os valores acima
+            df1.to_excel("CopiarValores.xlsx")
+
+            #Copia os valores do excel
+            df1.to_clipboard(excel=True, index=False)
+
+            #Deleta o arquivo excel
+            os.remove('CopiarValores.xlsx')
+
 janela.close()
 
 
