@@ -3,7 +3,11 @@ import pandas as pd
 import os
 
 
+
+#Declara as fontes:
 font = ('Arial', 8)
+
+
 
 # Limpar o resultado/valor líquido
 def limparConsulta():
@@ -21,6 +25,8 @@ def limparConsulta():
       janela['valor4'] .update('')
       janela['valorLiquido'] .update('')
 
+
+
 #Layout
 def janelaInicial():
       sg.theme('Dark Brown 1')
@@ -28,9 +34,9 @@ def janelaInicial():
             [sg.Text(''), sg.Text(''), sg.Text(''), sg.Text(''), sg.Text(''), sg.Text('Valor da Nota Fiscal:')],
             [sg.Text(''), sg.Text(''), sg.Text(''), sg.Text(''), sg.Text(''), sg.Text('R$'), sg.InputText(key='valorNotaFiscal', size=(10))],
             [sg.Text('')],
-            [sg.Text('IS:', size=(4)), sg.InputText('5.00', key='aliqISS', size=(4)), sg.Text('%'), sg.Text('', size=(4)), sg.Text('Dedução:'), sg.InputText('0', key='dedValor', size=(6))],
-            [sg.Text('INSS:'), sg.Button('11%', key='inss11'), sg.Button('3.5%', key='inss35'), sg.Text(''), sg.Text('Base:'), sg.InputText('100', key='inssDed', size=(4)), sg.Text('%')],
-            [sg.Text('IR:', size=(4)), sg.Button('1.5%', key='ir15'), sg.Button('1.0%', key='ir10')],
+            [sg.Text('IS:', size=(4)), sg.InputText('5,00', key='aliqISS', size=(4)), sg.Text('%'), sg.Text('', size=(4)), sg.Text('Dedução:'), sg.InputText('0', key='dedValor', size=(6))],
+            [sg.Text('INSS:'), sg.Button('11%', key='inss11'), sg.Button('3,5%', key='inss35'), sg.Text(''), sg.Text('Base:'), sg.InputText('100', key='inssDed', size=(4)), sg.Text('%')],
+            [sg.Text('IR:', size=(4)), sg.Button('1,5%', key='ir15'), sg.Button('1,0%', key='ir10')],
             [sg.Text('')],
             [sg.Button('PCC/IR'), sg.Button('PCC/IR/IS', size=(9)), sg.Button('PCC/IS'), sg.Button('PCC', size=(6))],
             [sg.Button('IS', size=(5)), sg.Button('PCC/IN/IR/IS'), sg.Button('IR/IS', size=(6)), sg.Button('ERAM', size=(5))],
@@ -42,13 +48,16 @@ def janelaInicial():
             [sg.Text(''), sg.Text(''), sg.Text(key='valorLiquido')],
             [sg.Text('', size=(10,0)), sg.Button('Copiar Valores')],
             [sg.Text('')],
-            [sg.Text('', size=(6,0)), sg.Text('Criado por Marcelo MSilva. v1.1!', font=font)],
+            [sg.Text('', size=(6,0)), sg.Text('Criado por Marcelo MSilva. v1.2!', font=font)],
 
       ]
       return sg.Window('Calculadora de impostos retidos na fonte v1.0', layout, finalize=True)
 
+
+
 #Criar janelas inicias
 janela = janelaInicial()
+
 
 
 #Declarando variáveis
@@ -59,13 +68,17 @@ INDed = 100
 ISDed = 0
 
 
+
 #Lendo ações
 while True:
       evento, valores = janela.read()
 
+
+
       # Se o evento for clicar no botão de fechar, então encerrar o programa.
       if evento == sg.WIN_CLOSED:
             break
+
 
 
       # Se o valor de valorNotaFiscal for nulo, então continue no looping
@@ -73,12 +86,16 @@ while True:
             continue
 
 
+
       # Define o valor inserido no campo valorNotaFiscal como float
       try:
-            fValorNF = float(valores['valorNotaFiscal'])
+            fValorNF = valores['valorNotaFiscal']
+            fValorNF = float(fValorNF.replace('.', '').replace(',', '.'))
+
       except ValueError:
             sg.popup('Verificar o valor da nota fiscal.')
             continue
+
 
 
       # Se o valor de dedValor for nulo, então será 0
@@ -86,8 +103,10 @@ while True:
             valores['dedValor'] = 0
 
 
+
       # Transforma o valor inserido no input dedValor em varíavel e float
       valorISDed = valores['dedValor']
+      valorISDed = float(valorISDed.replace('.', '').replace(',', '.'))
       try:
             ISDed = float(valorISDed)
       except ValueError:
@@ -96,13 +115,16 @@ while True:
       ISDed = float(valorISDed)
 
 
+
       # Se o valor de aliqISS for nulo, então será 0
       if valores['aliqISS'] == '':
             valores['aliqISS'] = 0
 
 
+
       # Transforma o valor inserido no input ISS em varíavel e float
       valorIS = valores['aliqISS']
+      valorIS = float(valorIS.replace('.', '').replace(',', '.'))
       try:
             IS = float(valorIS)
       except ValueError:
@@ -112,23 +134,187 @@ while True:
       ISReturn = IS
 
 
+
       # Se clicar no botão de 11% a váriavel IN será setada a 11%
       if evento == 'inss11':
             IN = (11 / 100)
+
+            #Se o primeiro campo for INSS:
+            if valores['codImp1'] == 'INSS:':
+                  IN = (fValorNF * (INDed / 100)) * IN
+
+                  valorLiq = fValorNF - IN
+
+                  convertIN = f'{IN:_.2f}'
+                  IN = convertIN.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor1'].update(IN)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IN = INReturn
+
+            #Se o primeiro campo for IN e o segundo IS:
+            if valores['codImp1'] == 'IN:' and valores['codImp2'] == 'IS:':
+                  IN = (fValorNF * (INDed / 100)) * IN
+                  IS = (fValorNF - ISDed) * IS / 100
+
+                  valorLiq = fValorNF - IN - IS
+
+                  convertIN = f'{IN:_.2f}'
+                  IN = convertIN.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor1'].update(IN)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IN = INReturn
+                  IS = ISReturn
+
+            #Se o primeiro campo for PCC, o segundo IN e o terceiro IR:
+            if valores['codImp1'] == 'PCC:' and valores['codImp2'] == 'IN:' and valores['codImp3'] == 'IR:':
+                  PCC = fValorNF * (4.65 / 100)
+                  IN = (fValorNF * (INDed / 100)) * IN
+                  IR = fValorNF * IR
+
+                  valorLiq = fValorNF - PCC - IN - IR
+
+                  convertIN = f'{IN:_.2f}'
+                  IN = convertIN.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor2'].update(IN)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IN = INReturn
+                  IR = IRReturn
+
+            #Se o primeiro campo for PCC, o segundo IN, o terceiro IR e o quarto IS:
+            if valores['codImp1'] == 'PCC:' and valores['codImp2'] == 'IN:' and valores['codImp3'] == 'IR:' and valores[
+                  'codImp4'] == 'IS:':
+                  PCC = fValorNF * (4.65 / 100)
+                  IN = (fValorNF * (INDed / 100)) * (11 / 100)
+                  IR = fValorNF * IR
+                  IS = (fValorNF - ISDed) * IS / 100
+
+                  valorLiq = fValorNF - PCC - IN - IR - IS
+
+                  convertIN = f'{IN:_.2f}'
+                  IN = convertIN.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor2'].update(IN)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+                  IN = INReturn
+                  IS = ISReturn
+
 
 
       # Se clicar no botão de 3.5% a váriavel IN será setada a 3.5%
       if evento == 'inss35':
             IN = (3.5 / 100)
 
+            #Se o primeiro campo for INSS:
+            if valores['codImp1'] == 'INSS:':
+                  IN = (fValorNF * (INDed / 100)) * IN
+
+                  valorLiq = fValorNF - IN
+
+                  convertIN = f'{IN:_.2f}'
+                  IN = convertIN.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor1'].update(IN)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IN = INReturn
+
+            #Se o primeiro campo for IN e o segundo IS:
+            if valores['codImp1'] == 'IN:' and valores['codImp2'] == 'IS:':
+                  IN = (fValorNF * (INDed / 100)) * IN
+                  IS = (fValorNF - ISDed) * IS / 100
+
+                  valorLiq = fValorNF - IN - IS
+
+                  convertIN = f'{IN:_.2f}'
+                  IN = convertIN.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor1'].update(IN)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IN = INReturn
+                  IS = ISReturn
+
+            #Se o primeiro campo for PCC, o segundo IN e o terceiro IR:
+            if valores['codImp1'] == 'PCC:' and valores['codImp2'] == 'IN:' and valores['codImp3'] == 'IR:':
+                  PCC = fValorNF * (4.65 / 100)
+                  IN = (fValorNF * (INDed / 100)) * IN
+                  IR = fValorNF * IR
+
+                  valorLiq = fValorNF - PCC - IN - IR
+
+                  convertIN = f'{IN:_.2f}'
+                  IN = convertIN.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor2'].update(IN)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IN = INReturn
+                  IR = IRReturn
+
+            #Se o primeiro campo for PCC, o segundo IN, o terceiro IR e o quarto IS:
+            if valores['codImp1'] == 'PCC:' and valores['codImp2'] == 'IN:' and valores['codImp3'] == 'IR:' and valores[
+                  'codImp4'] == 'IS:':
+                  PCC = fValorNF * (4.65 / 100)
+                  IN = (fValorNF * (INDed / 100)) * (3.5 / 100)
+                  IR = fValorNF * IR
+                  IS = (fValorNF - ISDed) * IS / 100
+
+                  valorLiq = fValorNF - PCC - IN - IR - IS
+
+                  convertIN = f'{IN:_.2f}'
+                  IN = convertIN.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor2'].update(IN)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+                  IN = INReturn
+                  IS = ISReturn
+
+
 
       # Transforma o valor inserido no input INDed em varíavel e float
       valorDed = valores['inssDed']
+      valorDed = float(valorDed.replace('.', '').replace(',', '.'))
+
 
 
       #Se não tiver valor na base do INSS, o valor será 0
       if valorDed == '':
             valorDed = 0
+
 
 
       #Se o valor da base do INSS for colocado com vírgula, irá gerar o seguinte erro:
@@ -141,18 +327,252 @@ while True:
       INReturn = IN
 
 
+
       # Se clicar no botão de 1.0% a váriavel IR será setada a 1.0%
       if evento == 'ir10':
             IR = (1 / 100)
+            #Se o IR estiver no primeiro campo:
+            if valores['codImp1'] == 'IR:':
+                  IR = fValorNF * (1 / 100)
+
+                  valorLiq = fValorNF - IR
+
+                  convertIR = f'{IR:_.2f}'
+                  IR = convertIR.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor1'].update(IR)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+
+            # Se o IR estiver no primeiro campo e o IS no segundo campo:
+            if valores['codImp1'] == 'IR:' and valores['codImp2'] == 'IS:':
+                  IR = fValorNF * (1 / 100)
+                  IS = (fValorNF - ISDed) * IS / 100
+
+                  valorLiq = fValorNF - IR - IS
+
+                  convertIR = f'{IR:_.2f}'
+                  IR = convertIR.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor1'].update(IR)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = (1 / 100)
+                  IS = (fValorNF - ISDed) * IS / 100
+
+            #Se o PCC estiver no primeiro campo e o IR no segundo campo:
+            if valores['codImp1'] == 'PCC:' and valores['codImp2'] == 'IR:':
+                  PCC = fValorNF * (4.65 / 100)
+                  IR = fValorNF * (1 / 100)
+
+                  valorLiq = fValorNF - PCC - IR
+
+                  convertIR = f'{IR:_.2f}'
+                  IR = convertIR.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor2'].update(IR)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+
+            #Se o PCC estiver no primeiro campo, o IR no segundo campo e o IS no terceiro campo:
+            if valores['codImp1'] == 'PCC:' and valores['codImp2'] == 'IR:' and valores['codImp3'] == 'IS:':
+                  PCC = fValorNF * (4.65 / 100)
+                  IR = fValorNF * (1 / 100)
+                  IS = (fValorNF - ISDed) * IS / 100
+
+                  valorLiq = fValorNF - PCC - IR - IS
+
+                  convertIR = f'{IR:_.2f}'
+                  IR = convertIR.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor2'].update(IR)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+                  IS = ISReturn
+
+            # Se o PCC estiver no primeiro campo, o IN no segundo campo e o IR no terceiro campo:
+            if valores['codImp1'] == 'PCC:' and valores['codImp2'] == 'IN:' and valores['codImp3'] == 'IR:':
+                  PCC = fValorNF * (4.65 / 100)
+                  IN = (fValorNF * (INDed / 100)) * IN
+                  IR = fValorNF * (1 / 100)
+
+                  valorLiq = fValorNF - PCC - IN - IR
+
+                  convertIR = f'{IR:_.2f}'
+                  IR = convertIR.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor3'].update(IR)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+                  IN = INReturn
+
+            # Se o PCC estiver no primeiro campo, o IN no segundo campo, o IR no terceiro campo e o IS no quarto campo:
+            if valores['codImp1'] == 'PCC:' and valores['codImp2'] == 'IN:' and valores['codImp3'] == 'IR:' and valores['codImp4'] == 'IS:':
+                  PCC = fValorNF * (4.65 / 100)
+                  IN = (fValorNF * (INDed / 100)) * IN
+                  IR = fValorNF * (1 / 100)
+                  IS = (fValorNF - ISDed) * IS / 100
+
+                  valorLiq = fValorNF - PCC - IN - IR -IS
+
+                  convertIR = f'{IR:_.2f}'
+                  IR = convertIR.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor3'].update(IR)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+                  IN = INReturn
+                  IS = ISReturn
+
 
 
       # Se clicar no botão de 1.5% a váriavel IR será setada a 1.5%
       if evento == 'ir15':
             IR = (1.5 / 100)
+            # Se o IR estiver no primeiro campo:
+            if valores['codImp1'] == 'IR:':
+                  IR = fValorNF * (1.5 / 100)
+
+                  valorLiq = fValorNF - IR
+
+                  convertIR = f'{IR:_.2f}'
+                  IR = convertIR.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor1'].update(IR)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+
+            # Se o IR estiver no primeiro campo e o IS no segundo campo:
+            if valores['codImp1'] == 'IR:' and valores['codImp2'] == 'IS:':
+                  IR = fValorNF * (1.5 / 100)
+                  IS = (fValorNF - ISDed) * IS / 100
+
+                  valorLiq = fValorNF - IR - IS
+
+                  convertIR = f'{IR:_.2f}'
+                  IR = convertIR.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor1'].update(IR)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+                  IS = (fValorNF - ISDed) * IS / 100
+
+            # Se o PCC estiver no primeiro campo e o IR no segundo campo:
+            if valores['codImp1'] == 'PCC:' and valores['codImp2'] == 'IR:':
+                  PCC = fValorNF * (4.65 / 100)
+                  IR = fValorNF * (1.5 / 100)
+
+                  valorLiq = fValorNF - PCC - IR
+
+                  convertIR = f'{IR:_.2f}'
+                  IR = convertIR.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor2'].update(IR)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+
+            # Se o PCC estiver no primeiro campo, o IR no segundo campo e o IS no terceiro campo:
+            if valores['codImp1'] == 'PCC:' and valores['codImp2'] == 'IR:' and valores['codImp3'] == 'IS:':
+                  PCC = fValorNF * (4.65 / 100)
+                  IR = fValorNF * (1.5 / 100)
+                  IS = (fValorNF - ISDed) * IS / 100
+
+                  valorLiq = fValorNF - PCC - IR - IS
+
+                  convertIR = f'{IR:_.2f}'
+                  IR = convertIR.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor2'].update(IR)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+                  IS = ISReturn
+
+            # Se o PCC estiver no primeiro campo, o IN no segundo campo e o IR no terceiro campo:
+            if valores['codImp1'] == 'PCC:' and valores['codImp2'] == 'IN:' and valores['codImp3'] == 'IR:':
+                  PCC = fValorNF * (4.65 / 100)
+                  IN = (fValorNF * (INDed / 100)) * IN
+                  IR = fValorNF * (1.5 / 100)
+
+                  valorLiq = fValorNF - PCC - IN - IR
+
+                  convertIR = f'{IR:_.2f}'
+                  IR = convertIR.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor3'].update(IR)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+                  IN = INReturn
+
+            # Se o PCC estiver no primeiro campo, o IN no segundo campo, o IR no terceiro campo e o IS no quarto campo:
+            if valores['codImp1'] == 'PCC:' and valores['codImp2'] == 'IN:' and valores['codImp3'] == 'IR:' and \
+                    valores['codImp4'] == 'IS:':
+                  PCC = fValorNF * (4.65 / 100)
+                  IN = (fValorNF * (INDed / 100)) * IN
+                  IR = fValorNF * (1.5 / 100)
+                  IS = (fValorNF - ISDed) * IS / 100
+
+                  valorLiq = fValorNF - PCC - IN - IR - IS
+
+                  convertIR = f'{IR:_.2f}'
+                  IR = convertIR.replace('.', ',').replace('_', '.')
+
+                  convertValorLiq = f'{valorLiq:_.2f}'
+                  valorLiq = convertValorLiq.replace('.', ',').replace('_', '.')
+
+                  janela['valor3'].update(IR)
+                  janela['valorLiquido'].update(f'O valor líquido é: {valorLiq}')
+
+                  IR = IRReturn
+                  IN = INReturn
+                  IS = ISReturn
+
 
 
       #Declara o valor de IRReturn para o valor do IR
-      IRReturn = IR
+      IRReturn = (1.5 / 100)
 
 
 
